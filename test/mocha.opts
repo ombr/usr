@@ -1,0 +1,6 @@
+--require chai
+--require tobi
+--reporter spec
+--ui bdd
+--compilers coffee:coffee-script
+--recursive

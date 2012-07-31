@@ -1,0 +1,11 @@
+User Management/Authentification WebService
+- if (everyauth.loggedIn)
+    h1 You Are loggued in ! 
+    - if (user.local)
+        #{user.local.login}
+    - if (user.facebook)
+        div Facebook TOKEN #{user.facebook.accessToken}
+    a(href="/logout") Logout
+- else
+    a(href="/auth/local")
+        h2 Not logged in...

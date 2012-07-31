@@ -1,0 +1,38 @@
+{
+  "name": "lalala",
+  "version": "0.0.1",
+  "description": "allaa",
+  "homepage": "http://github.com/ombr",
+  "author": {
+    "name": "Luc Boissaye",
+    "email": "luc@boissaye.fr",
+    "url": "http://github.com/ombr"
+  },
+  "licenses": [
+    {
+      "type": "MIT",
+      "url": "http://www.opensource.org/licenses/mit-license.php"
+    }
+  ],
+  "main": "index",
+  "dependencies": {
+    "log": "*",
+    "coffee-script": ">=1.3",
+    "express": ">=2.5",
+    "mongodb": "*",
+    "everyauth": "*",
+    "express": ">=2.3.10",
+    "node-promise": "*",
+    "async": "*"
+  },
+  "devDependencies": {
+    "tobi": ">=0.2.2",
+    "chai": ">=0.1.2",
+    "should": "*",
+    "mocha": ">=0.13.0"
+  },
+  "_id": "@0.0.1",
+  "engines": {
+    "node": ">=0.6"
+  }
+}
