@@ -5,11 +5,13 @@ module.exports = class Group extends Store
 
     addGroup : (groupName, cb)->
         @_addItem("_groups",
-            name : groupName,
-            users : []
-            groups : []
-            _users : []
-            _groups : []
+            {
+                name : groupName,
+                users : []
+                groups : []
+                _users : []
+                _groups : []
+            }
             ,cb
         )
 

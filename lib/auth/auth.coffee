@@ -1,4 +1,5 @@
-module.exports = class Auth
+Component = require '../component'
+module.exports = class Auth extends Component
     constructor : (app)->
         @app = app
         @._everyAuth()
@@ -15,29 +16,14 @@ module.exports = class Auth
             res.redirect('/auth/local')#!TODO RENDER LOGIN PAGE
         )
 
-        @app.get('/token/:token/:auth', (req, res)->
-            #SECURITY : You can only check your own token
-            if req.params['token'] != req.params['auth']
-                _.app._error(req,res)
-                return
-            userId = _.app.stores.token.getToken(req.params['token'],(datas)->
-                if datas == null
-                    _.app._error(req,res)
-                    return
-                _.app.stores.user.findUserById(datas.userId,(user)->
-                    if user != null
-                        res.json(user)
-                        return
-                    _.app._error(req,res)
-                    return
-                )
-            )
-        )
         @app.get('/redirect', (req, res)->
             if not req.loggedIn
+                res.json({})
+                return
                 res.redirect('/login/')
                 return
             tokenCallback = (token)->
+                req.session.token = token
                 if req.session.url?
                     #_.app.log.debug "Redirect "+url
                     url = req.session.url+token
@@ -53,16 +39,18 @@ module.exports = class Auth
             if req.session.token?
                 tokenCallback(req.session.token)
             else
-                _.app.stores.token.addToken(
-                    userId :req.user.id
-                    ,(newToken)->
-                        req.session.token = newToken
-                        tokenCallback(newToken)
-                        _.app.event.emit('user/token',
-                            token:newToken
-                        )
-                )
+                _.app.token.add(req.user.id, {}, tokenCallback)
         )
+    addUser : (source='', id='', datas={},cb)->
+        _ = @
+        store = @app.stores.user
+        store.addUser(source,id,datas,(userId)->
+            cb(userId)
+            _.emit('user/new',
+                userId:userId
+            )
+        )
+        
 
     login : (source, id, datas, user, cb)->
         _ = @
@@ -90,10 +78,10 @@ module.exports = class Auth
                         #find a better way ?
                         store.findUserById(userId,(user)->
                             cb(user)
+                            _.app.event.emit('user/login',
+                                userId:user.id
+                            )
                             return
-                            #_.app.event.emit('user/new',
-                            #    userId:userId
-                            #)
                         )
                     )
                 else
