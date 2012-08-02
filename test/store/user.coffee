@@ -7,6 +7,7 @@ describe('Store User', ()->
             store = {}
             describe('constructor', ()->
                 it('Can be instantiated with configs',(done)->
+                    console.log path
                     Store = require path
                     store = new Store(configs)
                     done()
@@ -77,6 +78,11 @@ describe('Store User', ()->
             )
         )
             
-    for i in ['../../lib/store/local/user']
-        testStore(i,null)
+    configs = require '../../configs-test'
+    tests =
+        '../../lib/store/local/user' : null
+        '../../lib/store/mongo/user':
+           'url' : configs.mongoUrl
+    for path,configs of tests
+        testStore(path,configs)
 )

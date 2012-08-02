@@ -22,7 +22,7 @@ else
     username: ""
     password: ""
     name: ""
-    db: "db"
+    db: "test"
 generate_mongo_url = (obj) ->
   obj.hostname = (obj.hostname or "localhost")
   obj.port = (obj.port or 27017)
@@ -32,6 +32,7 @@ generate_mongo_url = (obj) ->
   else
     "mongodb://" + obj.hostname + ":" + obj.port + "/" + obj.db
 
+configs.mongoUrl = generate_mongo_url(mongo)
 ###
 #Stores
 ###

@@ -11,7 +11,6 @@ app = express.createServer(
     express.cookieParser(),
     express.session({ secret: 'supersecret'}),
 )
-app.log = log
 
 Auth = require '../index'
 auth = new Auth(app,configs)
