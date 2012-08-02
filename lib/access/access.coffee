@@ -13,62 +13,57 @@ module.exports = class Access extends Component
     _isUserMemberOfGroup: (userId, groupName)->
         _ = @
         return (cb)->
-            try
-                _.app.stores.group.findGroupByName(groupName, (group)->
-                    _.app.stores.group.isUserMemberOfGroupCache(userId, group.id,(res)->
+                _.app.stores.group.findGroupByName(groupName, (err,group)->
+                    if err?
+                        if err[0] == 'Not found'
+                            cb(null,false)
+                            return
+                        else
+                            cb(err,null)
+                            return
+                    _.app.stores.group.isUserMemberOfGroupCache(userId, group.id,(err,res)->
                         cb(null, res)
                     )
                 )
-            catch e
-                if e == 'Not found'
-                    cb(null, false)
-                    return
-                throw e
-
     #!TODO improve this function with cache 
     _checkToken: (token, callbackOK)->
-        try
-            @token.getToken(token, (datas)->
-                #!TODO Token read only ?
-                #!TODO Token time expiration
-                if datas.userId?
-                    console.log "TOKEN OK"
-                    callbackOK(datas.userId)
-            )
-        catch e
-            throw e
+        _ = @
+        @token.getToken(token, (err,datas)->
+            _.checkErr(err)
+            #!TODO Token read only ?
+            #!TODO Token time expiration
+            if datas.userId?
+                callbackOK(null,datas.userId)
+        )
     
     check : (token, groups, cb, action = "undefined") ->
         _ = @
         @_checkToken(token,
-            (userId)->
+            (err,userId)->
+                _.checkErr(err)
                 groupCheck = []
                 for g in groups
                     groupCheck.push(_._isUserMemberOfGroup(userId, g))
-                try
-                    require('async').parallel(groupCheck,(err,res)->
-                        if true in res
-                            cb(userId)
-                            _.emit('access/'+action,
-                                granted : true
-                                token : token
-                                userId : userId
-                                groups : groups
-                            )
-                            return
+                require('async').parallel(groupCheck,(err,res)->
+                    _.checkErr(err)
+                    if true in res
+                        cb(null,userId)
                         _.emit('access/'+action,
-                            granted : false
+                            granted : true
                             token : token
                             userId : userId
                             groups : groups
                         )
-                        throw 'Access denied'
                         return
+                    _.emit('access/'+action,
+                        granted : false
+                        token : token
+                        userId : userId
+                        groups : groups
                     )
-                catch e
-                    console.log "ERROR IN CHECK ?#{e}?"
-                    console.log e
-                    throw e
+                    cb(['Access denied'],null)
+                    return
+                )
             )
     _add : (groupName, token, cb)->
         _ = @

@@ -19,8 +19,10 @@ module.exports = class User extends Store
 
     findUserBySourceAndId : (source, id, cb)->
         if not @_usersBySource[source]?
-            throw 'Not found'
+            cb(['Not found'],null)
+            return
         if not @_usersBySource[source][id]?
-            throw 'Not found'
-        cb(@_usersBySource[source][id])
+            cb(['Not found'],null)
+            return
+        cb(null,@_usersBySource[source][id])
 

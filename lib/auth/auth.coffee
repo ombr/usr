@@ -5,47 +5,12 @@ module.exports = class Auth extends Component
         @._everyAuth()
         @._routes()
 
-    _routes : ()->
-        _ = @
-        @app.get('/login/*', (req, res)->
-            if req.params? and req.params[0]? and req.params[0] != ''
-                req.session.url = req.params[0]
-            if req.user?
-                res.redirect('/redirect/')
-                return
-            res.redirect('/auth/local')#!TODO RENDER LOGIN PAGE
-        )
-
-        @app.get('/redirect', (req, res)->
-            if not req.loggedIn
-                res.json({})
-                return
-                res.redirect('/login/')
-                return
-            tokenCallback = (token)->
-                req.session.token = token
-                if req.session.url?
-                    #_.app.log.debug "Redirect "+url
-                    url = req.session.url+token
-                    req.session.url = null
-                    res.redirect(url)
-                    return
-                else
-                    #_.app.log.debug "Display token "+token
-                    res.json(
-                        token : token
-                    )
-                    return
-            if req.session.token?
-                tokenCallback(req.session.token)
-            else
-                _.app.token.add(req.user.id, {}, tokenCallback)
-        )
     addUser : (source='', id='', datas={},cb)->
         _ = @
         store = @app.stores.user
-        store.addUser(source,id,datas,(userId)->
-            cb(userId)
+        store.addUser(source,id,datas,(err,userId)->
+            _.checkErr(err)
+            cb(null,userId)
             _.emit('user/new',
                 userId:userId
             )
@@ -60,45 +25,76 @@ module.exports = class Auth extends Component
             #   Is it a new way of connection ?
             #@log.debug "User Is already in, let's add a way of login !"
         else
-            try
-                store.findUserBySourceAndId(source,id,(user)->
+            store.findUserBySourceAndId(source,id,(err,user)->
+                if err?
+                    if err[0] == 'Not found'
+                        store.addUser(source,id,datas,(err,userId)->
+                            #find a better way ?
+                            store.findUserById(userId,(err,user)->
+                                cb(null,user)
+                                _.app.event.emit('user/login',
+                                    userId:user.id
+                                )
+                                return
+                            )
+                        )
+                    else
+                        cb(err,null)
+                        return
+                else
                     if source == 'local'
                         #!TODO password hash with a good method....
                         if datas.password != user[source].password
-                            throw 'Wrong Password'
+                            cb(['Wrong Password'],null)
                             return
                     _.app.event.emit('user/login',
                         userId:user.id
                     )
-                    cb(user)
-                )
-            catch e
-                if e == 'Not found'
-                    store.addUser(source,id,datas,(userId)->
-                        #find a better way ?
-                        store.findUserById(userId,(user)->
-                            cb(user)
-                            _.app.event.emit('user/login',
-                                userId:user.id
-                            )
-                            return
-                        )
-                    )
-                else
-                    throw e
+                    cb(null,user)
+                    return
+            )
 
+    _routes : ()->
+        _ = @
+        @routeGet('/login/*', (req, res)->
+            if req.params? and req.params[0]? and req.params[0] != ''
+                req.session.url = req.params[0]
+            if req.user?
+                res.redirect('/redirect/')
+                return
+            res.redirect('/auth/local')#!TODO RENDER LOGIN PAGE
+        )
+
+        @routeGet('/redirect', (req, res)->
+            if not req.loggedIn
+                res.redirect('/login/')
+                return
+            tokenCallback = (err,token)->
+                req.session.token = token
+                if req.session.url?
+                    #_.app.log.debug "Redirect "+url
+                    url = req.session.url+token
+                    req.session.url = null
+                    res.redirect(url)
+                    return
+                else
+                    #_.app.log.debug "Display token "+token
+                    res.json(
+                        token : token
+                    )
+                    return
+            if req.session.token?
+                tokenCallback(null,req.session.token)
+            else
+                _.app.token.add(req.user.id, {}, tokenCallback)
+        )
     _everyAuth : ()->
         _ = @
         store = @app.stores.user
         @everyAuth = require 'everyauth'
         #@everyAuth.debug = true
         @everyAuth.everymodule.findUserById((id, cb)->
-            try
-                store.findUserById(id,(user)->
-                    cb(null,user)
-                )
-            catch e
-                cb([e],null)
+            store.findUserById(id,cb)
         )
         #PASSWORD :
         @everyAuth
@@ -109,17 +105,16 @@ module.exports = class Auth extends Component
                 .loginView('login')
                 .authenticate((login, password)->
                     promise = this.Promise()
-                    try
-                        _.login('local',login,
-                            login:login
-                            password:password
-                            ,null#!TODO put here user from session
-                            ,(user)->
-                                promise.fulfill(user)
-                        )
-                    catch e
-                        promise.fulfill([e])
-
+                    _.login('local',login,
+                        login:login
+                        password:password
+                        ,null#!TODO put here user from session
+                        ,(err,user)->
+                            if err != null
+                                promise.fulfill(err)
+                                return
+                            promise.fulfill(user)
+                    )
                     return promise
                 )
                 .getRegisterPath('/register')
@@ -136,8 +131,8 @@ module.exports = class Auth extends Component
         for providerName, providerConfigs of _.app.configs.everyAuth
             @._everyAuth_Providers(providerName, providerConfigs)
         #Register EveryAuth
-        @app.app.use(@everyAuth.middleware())
-        @everyAuth.helpExpress(@app.app)
+        @express().use(@everyAuth.middleware())
+        @everyAuth.helpExpress(@express())
 
     _everyAuth_Providers:(providerName, providerConfigs)->
         _ = @

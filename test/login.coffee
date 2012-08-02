@@ -14,7 +14,7 @@ describe('Login Logout', ()->
     )
 
     after(()->
-        app.app.close()
+        app.express.close()
     )
 
     describe('/login', ()->

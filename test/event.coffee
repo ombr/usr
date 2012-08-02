@@ -19,7 +19,7 @@ describe('Events', ()->
     )
 
     after(()->
-        app.app.close()
+        app.express.close()
     )
 
     describe('Ping', ()->
@@ -37,8 +37,8 @@ describe('Events', ()->
 
     describe('Subscribe', ()->
         it('Should be able to subscribe to events',(done)->
-            app.auth.addUser('local','ombr0',{},(userId)->
-                app.token.add(userId,{},(token)->
+            app.auth.addUser('local','ombr0',{},(err,userId)->
+                app.token.add(userId,{},(err,token)->
                     socket.on('event/subscribe',(datas)->
                         console.log "Subscribed :-)"
                         console.log datas

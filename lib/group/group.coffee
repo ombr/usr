@@ -1,4 +1,3 @@
-
 Component = require '../component'
 module.exports = class Group extends Component
     constructor : (app)->
@@ -10,11 +9,11 @@ module.exports = class Group extends Component
 
     _routes : ()->
         _ = @
-        @.route_get('/group/:token', (req, res)->
+        @.routeGet('/group/:token', (req, res)->
             res.redirect('/not-implemented-yet')
         )
 
-        @.route_post('/group/', (req, res)->
+        @.routePost('/group/', (req, res)->
             _.add(
                 req.params.name,
                 req.params.token,
@@ -23,7 +22,7 @@ module.exports = class Group extends Component
             )
         )
 
-        @.route_post('/group/:name/users/', (req, res)->
+        @.routePost('/group/:name/users/', (req, res)->
             #!TODO Get user by token ?
             userId = req.params.userId
             _.addUserToGroup(
@@ -41,8 +40,6 @@ module.exports = class Group extends Component
         _.app.access.check(token, ['_group_add','_root'],(userId)->
             #!TODO check group existence
             _.store.addGroup(groupName, (groupId)->
-                console.log "TEST :"
-                console.log cb
                 cb(groupId)
                 _.event.emit('group:new',
                     groupId : groupId

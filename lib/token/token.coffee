@@ -8,16 +8,17 @@ module.exports = class Token extends Component
 
     _routes : ()->
         _ = @
-        @route_get('/token/:token/:auth', (req, res)->
+        #!TODO change this route...
+        @routeGet('/token/:token/:auth', (req, res)->
             #SECURITY : You can only check your own token
             if req.params['token'] != req.params['auth']
                 _.app._error(req,res)
                 return
-            userId = _.app.stores.token.getToken(req.params['token'],(datas)->
+            userId = _.app.stores.token.getToken(req.params['token'],(err,datas)->
                 if datas == null
                     _.app._error(req,res)
                     return
-                _.app.stores.user.findUserById(datas.userId,(user)->
+                _.app.stores.user.findUserById(datas.userId,(err,user)->
                     if user != null
                         res.json(user)
                         return
@@ -35,13 +36,11 @@ module.exports = class Token extends Component
             {
                 userId : userId
             },
-            (token)->
-                cb(token)
+            (err,token)->
+                _.checkErr(err)
+                cb(err,token)
                 _.emit('token/new',
                     token: token
                     userId : userId
                 )
         )
-    delete : (token, cb)->
-        return
-
