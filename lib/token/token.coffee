@@ -29,7 +29,7 @@ module.exports = class Token extends Component
         )
 
     get : (token, cb)->
-        @store.get(token, cb)
+        @store.getToken(token, cb)
     add : (userId, options, cb)->
         _ = @
         _.app.stores.token.addToken(
@@ -43,4 +43,29 @@ module.exports = class Token extends Component
                     token: token
                     userId : userId
                 )
+        )
+    #!TODO ADD Check on AppToken
+    getInfo : (token, appToken, cb)->
+        _ = @
+        json = {}
+        _.get(token,(err,datas)->
+            if err != null
+                cb(err,json)
+                return
+            _.app.stores.user.findUserById(datas.userId, (err,user)->
+                if err != null
+                    cb(err,json)
+                    return
+                json= user
+                _.app.stores.group.getGroupsUserIsMemberOf(user.id, (err,groups)->
+                    if err != null
+                        cb(err,json)
+                        return
+                    json.groups = []
+                    for k,g of groups
+                        json.groups.push(g.name)
+                    cb(err,json)
+                    return
+                )
+            )
         )

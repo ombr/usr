@@ -4,6 +4,8 @@ module.exports = class Event extends Component
         @app = app
         @access = app.access
         io = require('socket.io').listen(@express())
+        io.set('log level', 1)
+        
         @channel = io.of('/auth')#!TODO Put in configs...
         #@channel = io
         @_init_socket()

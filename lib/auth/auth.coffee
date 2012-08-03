@@ -5,6 +5,7 @@ module.exports = class Auth extends Component
         @._everyAuth()
         @._routes()
 
+    #No Check on addUser, everybody can register or create a new user
     addUser : (source='', id='', datas={},cb)->
         _ = @
         store = @app.stores.user
@@ -12,7 +13,9 @@ module.exports = class Auth extends Component
             _.checkErr(err)
             cb(null,userId)
             _.emit('user/new',
-                userId:userId
+                userId : userId
+                source : source
+                id : id
             )
         )
         
@@ -56,6 +59,17 @@ module.exports = class Auth extends Component
 
     _routes : ()->
         _ = @
+
+        #Add a Are you sure on the logout ?
+        @routeGet('/logout/*', (req, res)->
+            req.logout()
+            delete(req.session.token)
+            if req.params? and req.params[0]? and req.params[0] != ''
+                res.redirect(req.params[0])
+                return
+            #!TODO redirect you from where you are coming ?
+            res.redirect('/')#!TODO RENDER LOGIN PAGE
+        )
         @routeGet('/login/*', (req, res)->
             if req.params? and req.params[0]? and req.params[0] != ''
                 req.session.url = req.params[0]
@@ -65,6 +79,16 @@ module.exports = class Auth extends Component
             res.redirect('/auth/local')#!TODO RENDER LOGIN PAGE
         )
 
+
+        #!TODO Check on AppToken
+        @routeGet('/info/:token/:appToken', (req, res)->
+            json = {}
+            _.app.token.getInfo(req.params.token,req.params.appToken,(err,info)->
+                _.checkErr(err)
+                res.json(info)
+            )
+
+        )
         @routeGet('/redirect', (req, res)->
             if not req.loggedIn
                 res.redirect('/login/')

@@ -1,9 +1,12 @@
-
 module.exports = class App
     constructor : (express,@configs)->
         _ = @
-        Log = require 'log'
-        @log = new Log()
+        if not @configs.logger?
+            Log = require 'log'
+            @log = new Log("warning")
+        else
+            @log = @configs.logger
+
         EventEmitter = require('eventemitter2').EventEmitter2
         @_event = new EventEmitter(
             wildcard:true
@@ -14,17 +17,24 @@ module.exports = class App
 
         #!TODO move this function to access...
         @_event.once('token/new',(datas)->
-            console.log "Check INIT ROOT ?"
+            _.log.debug "First token has been created maybe a root group need to be created ?"
             _.stores.group.findGroupByName('root',(err,group)->
                 if group == null
-                    console.log "ROOT NULL ?"
                     _.stores.group.addGroup('_root',(err,groupId)->
+                        _.emit('group/new',
+                            groupId : groupId
+                            token : datas.token
+                        )
                         _.stores.group.addUserToGroup(datas.userId,groupId,(err,res)->
-                            if !res
-                                throw "Error root access granted..."
+                            _.emit('group/addUser',
+                                groupId : groupId
+                                token : datas.token
+                                userId : datas.userId
+                            )
                             _.stores.group.addUserToGroupCache(datas.userId,groupId,(err,res)->
                                 if !res
                                     throw "Error root access granted..."
+                                # Might be a bit strange, but root seems to proclam himself root
                                 _.emit('root/new',datas)
                             )
                         )
@@ -50,7 +60,7 @@ module.exports = class App
             'access' : './access/access'
             'event' : './event/event'
         for name,file of modules
-            console.log "Load #{file} as #{name}"
+            @log.info "Load #{file} as #{name}"
             Module = require file
             @[name] = new Module(@)
 
