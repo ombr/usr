@@ -17,17 +17,22 @@ module.exports = class Component
         res.json(
             error:true
         )
+    #!TODO Make a better check error
+    checkErr : (err)->
+        if err != null
+            throw new Error(err)
+        
     ###
     #   Express route encapsulation
     ###
-    route_get : (args...)->
-        @app.app.get(args...)
-    route_post : (args...)->
-        @app.app.post(args...)
-    route_update : (args...)->
-        @app.app.update(args...)
-    route_delete : (args...)->
-        @app.app.delete(args...)
+    routeGet : (args...)->
+        @express().get(args...)
+    routePost : (args...)->
+        @express().post(args...)
+    routeUpdate : (args...)->
+        @express().update(args...)
+    routeDelete : (args...)->
+        @express().delete(args...)
 
     ###
     #   Events
@@ -36,3 +41,8 @@ module.exports = class Component
         @app._event.emit(args...)
     on : (args...)->
         @app._event.on(args...)
+
+    log : ()->
+        return @app.log
+    express : ()->
+        return @app.express

@@ -3,7 +3,6 @@ module.exports = class User extends Store
     constructor : (configs)->
         @_users = {}
         @_usersBySource = {}
-        @_groups = {}
     addUser : (source, id, datas,cb)->
         user = {}
         datas.id = id
@@ -19,8 +18,13 @@ module.exports = class User extends Store
 
     findUserBySourceAndId : (source, id, cb)->
         if not @_usersBySource[source]?
-            throw 'Not found'
+            cb(['Not found'],null)
+            return
         if not @_usersBySource[source][id]?
-            throw 'Not found'
-        cb(@_usersBySource[source][id])
-
+            cb(['Not found'],null)
+            return
+        cb(null,@_usersBySource[source][id])
+    empty : (cb)->
+        @_empty('_users')
+        @_empty('_usersBySource')
+        cb(null,true)

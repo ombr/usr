@@ -18,7 +18,8 @@ describe('Store User', ()->
                         store.addUser('local','user1',
                             login:'user1'
                             password: 'superpassword'
-                            ,(userId)->
+                            ,(err,userId)->
+                                should.not.exist(err)
                                 should.exist(userId)
                                 done()
                         )
@@ -27,19 +28,19 @@ describe('Store User', ()->
 
                 describe('findUserId', ()->
                     it('Should not be able to retrieve a non existing user',(done)->
-                        try
-                            store.findUserById(Math.round(Math.random()*100000),(user)->
-                                throw "Callback should not be called"
-                            )
-                        catch e
-                            done()
+                        store.findUserById(Math.round(Math.random()*100000),(err,userId)->
+                                should.exist(err)
+                                should.not.exist(userId)
+                                done()
+                        )
                     )
                     it('Should be able to retrieve an existing user',(done)->
                         store.addUser('local','user3',
                             login:'user3'
                             password: 'superpassword'
-                            ,(userId)->
-                                store.findUserById(userId,(user)->
+                            ,(err,userId)->
+                                store.findUserById(userId,(err,user)->
+                                    should.not.exist(err)
                                     should.exist(user)
                                     should.exist(user.id)
                                     user['local'].login.should.eql('user3')
@@ -51,19 +52,19 @@ describe('Store User', ()->
                 )
                 describe('findUserBySourceAndId', ()->
                     it('Should not be able to retrieve a non existing user',(done)->
-                        try
                             store.findUserBySourceAndId('local','nonuser',(err,user)->
-                                throw "Callback should not be called"
+                                should.exist(err)
+                                should.not.exist(user)
+                                done()
                             )
-                        catch e
-                            done()
                     )
                     it('Should be able to retrieve an existing user',(done)->
                         store.addUser('local','user2',
                             login:'user2'
                             password: 'superpassword'
                             ,(err,user)->
-                                store.findUserBySourceAndId('local','user2',(user)->
+                                store.findUserBySourceAndId('local','user2',(err,user)->
+                                    should.not.exist(err)
                                     should.exist(user)
                                     user.local.login.should.equal('user2')
                                     user.local.password.should.equal('superpassword')

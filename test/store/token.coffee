@@ -16,7 +16,9 @@ describe('Store Token',()->
                     store.addToken(
                         content: 'lalal'
                         plus : 'yeass'
-                    ,(token)->
+                    ,(err,token)->
+                        should.not.exist(err)
+                        should.exist(token)
                         done()
                     )
                 )
@@ -29,8 +31,9 @@ describe('Store Token',()->
                             difficult: 'Oui !'
                     store.addToken(
                         obj,
-                        (token)->
-                            store.getToken(token,(datas)->
+                        (err,token)->
+                            store.getToken(token,(err,datas)->
+                                should.not.exist(err)
                                 datas.should.eql(obj)
                                 done()
                             )
@@ -47,8 +50,9 @@ describe('Store Token',()->
                             difficult: 'Oui !'
                     store.addToken(
                         obj,
-                        (token)->
-                            store.getToken(token,(datas)->
+                        (err,token)->
+                            store.getToken(token,(err,datas)->
+                                should.not.exist(err)
                                 datas.should.eql(obj)
                                 done()
                             )
@@ -64,12 +68,13 @@ describe('Store Token',()->
                             difficult: 'Oui !'
                     store.addToken(
                         obj,
-                        (token)->
-                            store.getToken(token,(datas)->
+                        (err,token)->
+                            store.getToken(token,(err,datas)->
                                 datas.should.eql(obj)
-                                store.deleteToken(token,(res)->
+                                store.deleteToken(token,(err,res)->
                                     res.should.be.true
-                                    store.getToken(token,(datas)->
+                                    store.getToken(token,(err,datas)->
+                                        err[0].should.eql('Not found')
                                         should.not.exist(datas)
                                         done()
                                     )
@@ -88,12 +93,13 @@ describe('Store Token',()->
                             difficult: 'Oui !'
                     store.addToken(
                         obj,
-                        (token)->
-                            store.getToken(token,(datas)->
+                        (err,token)->
+                            store.getToken(token,(err,datas)->
                                 datas.should.eql(obj)
-                                store.deleteToken(token,(res)->
+                                store.deleteToken(token,(err,res)->
                                     res.should.be.true
-                                    store.getToken(token,(datas)->
+                                    store.getToken(token,(err,datas)->
+                                        err[0].should.eql('Not found')
                                         should.not.exist(datas)
                                         done()
                                     )
@@ -110,14 +116,15 @@ describe('Store Token',()->
                             difficult: 'Oui !'
                     store.addToken(
                         obj,
-                        (token)->
-                            store.getToken(token,(datas)->
+                        (err,token)->
+                            store.getToken(token,(err,datas)->
                                 datas.should.eql(obj)
-                                store.deleteToken(token,(res)->
+                                store.deleteToken(token,(err,res)->
                                     res.should.be.true
-                                    store.getToken(token,(datas)->
+                                    store.getToken(token,(err,datas)->
                                         should.not.exist(datas)
-                                        store.deleteToken(token,(res)->
+                                        store.deleteToken(token,(err,res)->
+                                            should.not.exist(err)
                                             res.should.be.false
                                             done()
                                         )
