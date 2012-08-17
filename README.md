@@ -29,8 +29,28 @@ An easy to deploy on cloudfoundry webservice that you can use for any of your pr
 
 # Features/Status :
 
-- Full REST groups and user management
-- Oauth2 login
-- Admin interface
--....
+In this first dev release you can find :
+- the beginning of the local storage (usefull for testing)
+- a Makefile
+- Some event capabilities with socket io
+- a bad version of authentification with token (will be replace quickly with oauth2)
+- Basic and non crypted user authentification
+- a bit of group management
+- Some tests
+- first ideas on access management
 
+Next priorities :
+- OAuth2
+- More test
+- Group and access management
+- Full restfull interface
+- logs
+- coffee lint
+
+Some futures priorities :
+
+- Events with socket.io
+- MongoDb/CouchDb/Redis stores
+- Admin interface
+
+More is coming....
