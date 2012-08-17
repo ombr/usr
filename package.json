@@ -36,7 +36,8 @@
     "eventemitter2": "~0.4.9",
     "async": "~0.1.22",
     "socket.io": "~0.9.9",
-    "jade": "~0.27.0"
+    "jade": "~0.27.0",
+    "supervisor": "~0.4.1"
   },
   "engines": {
     "node": ">=0.6"
