@@ -20,7 +20,7 @@ module.exports = class Component
     #!TODO Make a better check error
     checkErr : (err)->
         if err != null
-            throw err
+            throw new Error(err)
         
     ###
     #   Express route encapsulation
