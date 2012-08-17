@@ -6,17 +6,20 @@ module.exports = class Token extends Store
     addToken : (datas, cb)->
         token = @._generateId()
         @_tokens[token] = datas
-        cb(token)
+        cb(null,token)
 
     getToken : (token,cb)->
         if @_tokens[token]?
-            cb(@_tokens[token])
+            cb(null,@_tokens[token])
             return
-        cb(null)
+        cb(['Not found'],null)
 
     deleteToken : (token,cb)->
         if @_tokens[token]?
             delete(@_tokens[token])
-            cb(true)
+            cb(null,true)
             return
-        cb(false)
+        cb(null,false)
+    empty : (cb)->
+        @_empty('_tokens')
+        cb(null,true)

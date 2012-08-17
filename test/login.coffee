@@ -1,20 +1,22 @@
 should = require('chai').should()
 expect = require('chai').expect()
-tobi = require 'tobi'
 
 describe('Login Logout', ()->
 
     app = {}
+
+    app = {}
     browser = {}
+    tool = require './tool'
+
     before(()->
-        app = require('./app')()
-        tobi.Browser.browsers = {}
-        browser = tobi.createBrowser(3001, 'local.host')
-        browser.userAgent = 'Mozilla/5.0 (X11; Linux i686) AppleWebKit/534.30 (KHTML, like Gecko) Chrome/12.0.742.100 Safari/534.30'
+        app = tool.app()
+        console.log app.stores
+        browser = tool.browser()
     )
 
     after(()->
-        app.app.close()
+        tool.delete(app)
     )
 
     describe('/login', ()->
@@ -24,6 +26,7 @@ describe('Login Logout', ()->
                     email : 'ombr'
                     password : 'ombr'
                 ).submit((res,$)->
+                    should.exist(res.body.token)
                     browser.get('/token/'+res.body.token+"/"+res.body.token,(res,$)->
                         res.body.local.login.should.eql('ombr')
                         done()

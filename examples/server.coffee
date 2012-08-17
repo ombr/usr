@@ -2,19 +2,18 @@ Async = require 'async'
 Log = require 'log'
 
 log = new Log('warning')
-configs = require '../configs'
+configs = require './configs'
 
 express = require 'express'
 app = express.createServer(
     express.bodyParser(),
-    express.static(__dirname + "/public"),
     express.favicon(),
     express.cookieParser(),
     express.session({ secret: 'supersecret'}),
 )
 app.log = log
 
-Auth = require './app'
+Auth = require '../index'
 auth = new Auth(app,configs)
 
 app.get('/', (req, res)->
@@ -29,4 +28,3 @@ app.configure(()->
 app.listen(configs.app.port)
 log.info __dirname
 log.info 'Application started http://local.host:'+configs.app.port
-module.exports = app

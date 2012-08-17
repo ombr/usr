@@ -6,7 +6,9 @@ module.exports = configs
 ###
 configs.app =
     port : process.env.VCAP_APP_PORT or 3001
-
+Log = require 'log'
+#configs.logger = new Log('error')
+configs.logger = new Log()
 ###
 #MONGO
 ###

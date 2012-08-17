@@ -13,22 +13,24 @@ module.exports = class Store
             throw "INTERNAL : Id collision"
         datas.id = id
         @[field][id] = datas
-        cb(id)
+        cb(null,id)
 
     _getItem:(field,id, cb)->
         if not @[field]?
             throw "INTERNAL : Field does not exists"
         if not @[field][id]?
-            throw "Not found"
-        cb(@[field][id])
+            cb(['Not found'],null)
+            return
+        cb(null,@[field][id])
 
     _deleteItem:(field,id, cb)->
         if not @[field]?
             throw "INTERNAL : Field does not exists"
         if not @[field][id]?
-            throw "Not found"
+            cb(['Not found'],null)
+            return
         delete(@[field][id])
-        cb(true)
+        cb(null,true)
 
     _findOneItemBy : (field, fieldToSearch, value, cb)->
         if not @[field]?
@@ -36,29 +38,33 @@ module.exports = class Store
         for k, v of @[field]
             if v[fieldToSearch]?
                 if v[fieldToSearch] == value
-                    cb(v)
+                    cb(null,v)
                     return
-        throw "Not found"
+        cb(['Not found'],null)
+        return
 
     _addItemToItemField : (groupId, field, item,cb)->
         if not @_groups[groupId]?
-            throw "Group does not exists"
+            cb(['Group does not exists'],null)
+            return
         if not @_groups[groupId][field]?
             throw "INTERNAL : Field does not exists"
         if item in @_groups[groupId][field]
-            throw "Item already in field"
+            cb(['Item already in field'],null)
+            return
         @_groups[groupId][field].push(item)
-        cb(true)
+        cb(null,true)
 
     _isItemInItemField : (groupId,field, item, cb)->
         if not @_groups[groupId]?
-            throw "Group does not exists"
+            cb(['Group does not exists'],null)
+            return
         if not @_groups[groupId][field]?
             throw "INTERNAL : Field does not exists"
         if item in @_groups[groupId][field]
-            cb(true)
+            cb(null,true)
             return
-        cb(false)
+        cb(null,false)
 
     _getItemsWhereItemIsInField : (field, item, cb)->
         res = []
@@ -66,18 +72,23 @@ module.exports = class Store
             if v[field]?
                 if item in v[field]
                     res.push(v)
-        cb(res)
+        cb(null,res)
 
     _removeItemFromItemField : (groupId, field, item,cb)->
         if not @_groups[groupId]?
-            throw "Group does not exists"
+            cb(['Group does not exists'],null)
+            return
         if not @_groups[groupId][field]?
             throw "INTERNAL : Field does not exists"
         if not item in @_groups[groupId][field]
-            throw "Item not in field"
+            cb(['Item not in field'],null)
+            return
+
         index = @_groups[groupId][field].indexOf(item)
         if index == -1
-            cb(false)
+            cb(null,false)
             return
         @_groups[groupId][field].splice(index, 1)
-        cb(true)
+        cb(null,true)
+    _empty : (field)->
+        @[field] = []
