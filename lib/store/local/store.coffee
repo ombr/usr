@@ -90,3 +90,5 @@ module.exports = class Store
             return
         @_groups[groupId][field].splice(index, 1)
         cb(null,true)
+    _empty : (field)->
+        @[field] = []

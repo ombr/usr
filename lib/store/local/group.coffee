@@ -66,3 +66,6 @@ module.exports = class Group extends Store
 
     getGroupsGroupIsMemberOfCache : (groupgroupId, cb)->
         @_getItemsWhereItemIsInField("_groups", groupId, cb)
+    empty : (cb)->
+        @_empty('_groups')
+        cb(null,true)

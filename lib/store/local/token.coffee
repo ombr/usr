@@ -20,3 +20,6 @@ module.exports = class Token extends Store
             cb(null,true)
             return
         cb(null,false)
+    empty : (cb)->
+        @_empty('_tokens')
+        cb(null,true)
