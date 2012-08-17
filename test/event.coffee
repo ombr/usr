@@ -12,9 +12,7 @@ describe('Events', ()->
 
     before((done)->
         app = tool.app()
-        tobi.Browser.browsers = {}
-        browser = tobi.createBrowser(3001, 'local.host')
-        browser.userAgent = 'Mozilla/5.0 (X11; Linux i686) AppleWebKit/534.30 (KHTML, like Gecko) Chrome/12.0.742.100 Safari/534.30'
+        browser = tool.browser()
         io = require 'socket.io-client'
         socket = io.connect('http://local.host:3001/auth')
         done()
@@ -22,7 +20,7 @@ describe('Events', ()->
 
 
     after(()->
-        app.express.close()
+        tool.delete(app)
     )
 
     describe('Ping', ()->

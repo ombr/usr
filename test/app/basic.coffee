@@ -1,10 +1,8 @@
 should = require('chai').should()
 expect = require('chai').expect()
-tobi = require 'tobi'
 
 ###
 # Here we test the service for a basic app creation an use.
-###
 describe('Basic App', ()->
 
     app = {}
@@ -15,13 +13,11 @@ describe('Basic App', ()->
 
     before(()->
         app = tool.app()
-        tobi.Browser.browsers = {}
-        browser = tobi.createBrowser(3001, 'local.host')
-        browser.userAgent = 'Mozilla/5.0 (X11; Linux i686) AppleWebKit/534.30 (KHTML, like Gecko) Chrome/12.0.742.100 Safari/534.30'
+        browser = tool.browser()
     )
 
     after(()->
-        app.express.close()
+        tool.delete(app)
     )
 
     rootToken = ""
@@ -67,3 +63,4 @@ describe('Basic App', ()->
         )
     )
 )
+###
