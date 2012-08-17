@@ -26,14 +26,14 @@ module.exports = class Access extends Component
                     )
                 )
     #!TODO improve this function with cache 
-    _checkToken: (token, callbackOK)->
+    _checkToken: (token, cb)->
         _ = @
         @token.getToken(token, (err,datas)->
             _.checkErr(err)
             #!TODO Token read only ?
             #!TODO Token time expiration
             if datas.userId?
-                callbackOK(null,datas.userId)
+                cb(null,datas.userId)
         )
     
     check : (token, groups, cb, action = "undefined") ->

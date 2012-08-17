@@ -56,7 +56,7 @@ module.exports = class Token extends Component
                 if err != null
                     cb(err,json)
                     return
-                json= user
+                json = user
                 _.app.stores.group.getGroupsUserIsMemberOf(user.id, (err,groups)->
                     if err != null
                         cb(err,json)

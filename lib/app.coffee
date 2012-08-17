@@ -55,6 +55,7 @@ module.exports = class App
         #Init modules
         modules =
             'auth' : './auth/auth'
+            'user' : './user/user'
             'group' : './group/group'
             'token' : './token/token'
             'access' : './access/access'

@@ -6,10 +6,10 @@ module.exports = class Auth extends Component
         @._routes()
 
     #No Check on addUser, everybody can register or create a new user
-    addUser : (source='', id='', datas={},cb)->
+    addUser : (source='', id='', datas={}, cb)->
         _ = @
         store = @app.stores.user
-        store.addUser(source,id,datas,(err,userId)->
+        store.addUser(source, id, datas, (err, userId)->
             _.checkErr(err)
             cb(null,userId)
             _.emit('user/new',
@@ -18,7 +18,6 @@ module.exports = class Auth extends Component
                 id : id
             )
         )
-        
 
     login : (source, id, datas, user, cb)->
         _ = @
@@ -28,7 +27,7 @@ module.exports = class Auth extends Component
             #   Is it a new way of connection ?
             #@log.debug "User Is already in, let's add a way of login !"
         else
-            store.findUserBySourceAndId(source,id,(err,user)->
+            store.findUserBySourceAndId(source, id, (err,user)->
                 if err?
                     if err[0] == 'Not found'
                         store.addUser(source,id,datas,(err,userId)->

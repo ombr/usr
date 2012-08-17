@@ -24,7 +24,7 @@ describe('Token GetInfo', ()->
             tool.token(app,userId, (token)->
                 rootToken = token
                 setTimeout(()-> #Timeout required for event propagation
-                    app.token.getInfo(token,(err,infos)->
+                    app.token.getInfo(token,token,(err,infos)->
                         should.not.exist(err)
                         should.exist(infos)
                         infos.id.should.eql rootId
