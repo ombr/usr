@@ -1,93 +1,136 @@
+EventEmitter = require('eventemitter2').EventEmitter2
+Q = require 'q'
+
 module.exports = class App
-    constructor : (express,@configs)->
-        _ = @
-        if not @configs.logger?
-            Log = require 'log'
-            @log = new Log("warning")
-        else
-            @log = @configs.logger
+  _modules : []
+  _configs : {}
+  http : null
+  express : null
+  config : (name, def, description)->
+    console.log "Get config #{name} : #{description} -> #{def}"
+    if process.env[name]?
+      return Q.when(process.env[name])
+    if @_configs[name]?
+      return Q.when(@_configs[name].value)
+    @_configs[name] =
+      value : def
+      description : description
+    return Q.fcall(()->
+      return def
+    )
+  log : console.log
+  constructor : ()->
+    return
+  #
+  # Here is the shortcut to load a module
+  # Module are loaded by reading the config.
+  #
+  module : (name)->
+    _ = @
+    console.log "Get Module #{name}"
+    defer = Q.defer()
+    if _._modules[name]?
+      defer.resolve(_._modules[name])
+    else
+      @config(
+        "module-#{name}",
+        "./#{name}/#{name}"
+        "The path of the module #{name}"
+      ).then((modulePath)->
+        console.log "Loading Module #{name}"
+        Module = require(modulePath)
+        module = new Module
+        _._modules[name] = module
+        module.app = _
+        console.log "INIT"
+        module.init(
+          app : _.app
+          usr : _
+        ).then(()->
+          console.log "Module #{name} loaded"
+          defer.resolve(module)
+        ).end()
+      ).end()
+    return defer.promise
+  #
+  # This function use the configs to validate by regex the strings
+  #
+  validate : (name, string)->
+    console.log "VALIDATE"
+    return @config(
+      'regex-'+name,
+      '/^.*$/i', "The regex to validate #{name} string"
+    ).then((regex)->
+      console.log "VALIDATED"+string.match(regex)
+      return string
+      return string.match(regex)
+    )
+  run: ()->
+    #console.log "Run"
+    @config("module-store-user", "./store/store", "Store for users.")
+    console.log "INIT ROUTE"
+    @module("route")
+    return
 
-        EventEmitter = require('eventemitter2').EventEmitter2
-        @_event = new EventEmitter(
-            wildcard:true
-        )
-        @_event.on('*',(infos)->
-            _.log.debug "EVENT #{@event} : #{JSON.stringify(infos)}"
-        )
+    _ = @
+    if not @configs.logger?
+      Log = require 'log'
+      @log = new Log("warning")
+    else
+      @log = @configs.logger
 
-        #!TODO move this function to access...
-        @_event.once('token/new',(datas)->
-            _.log.debug "First token has been created maybe a root group need to be created ?"
-            _.stores.group.findGroupByName('root',(err,group)->
-                if group == null
-                    _.stores.group.addGroup('_root',(err,groupId)->
-                        _.emit('group/new',
-                            groupId : groupId
-                            token : datas.token
-                        )
-                        _.stores.group.addUserToGroup(datas.userId,groupId,(err,res)->
-                            _.emit('group/addUser',
-                                groupId : groupId
-                                token : datas.token
-                                userId : datas.userId
-                            )
-                            _.stores.group.addUserToGroupCache(datas.userId,groupId,(err,res)->
-                                if !res
-                                    throw "Error root access granted..."
-                                # Might be a bit strange, but root seems to proclam himself root
-                                _.emit('root/new',datas)
-                            )
-                        )
-                    )
+    @_event = new EventEmitter(
+      wildcard:true
+    )
+    @_event.on('*',(infos)->
+      _.log.debug "EVENT #{@event} : #{JSON.stringify(infos)}"
+    )
+
+    #!TODO move this function to access...
+    @_event.once('token/new',(datas)->
+      _.log.debug "First token created, _root init ?"
+      _.stores.group.findGroupByName('root',(err,group)->
+        if group == null
+          _.stores.group.addGroup('_root',(err,groupId)->
+            _.emit('group/new',
+              groupId : groupId
+              token : datas.token
             )
-        )
-        #@log = @app.log
-        @express = express
-        @express[ "auth" or @configs.bind] = @ #express binding
+            _.stores.group.addUserToGroup(datas.userId,groupId,(err,res)->
+              _.emit('group/addUser',
+                groupId : groupId
+                token : datas.token
+                userId : datas.userId
+              )
+              _.stores.group.addUserToGroupCache(
+                datas.userId,groupId,
+                (err,res)->
+                  if !res
+                    throw new Error("Error root access granted...")
+                    # Might be a bit strange, but
+                    # root seems to proclam himself root
+                    _.emit('root/new',datas)
+              )
+            )
+          )
+      )
+    )
+    #Init stores :
+    @stores = {}
+    for store,configs of @configs.stores
+      StoreClass = require '../'+configs.class
+      @stores[store] = new StoreClass(configs.configs)
+    #!TODO Check If stores are OK (user, token, group)
 
-        #Init stores :
-        @stores = {}
-        for store,configs of @configs.stores
-            StoreClass = require '../'+configs.class
-            @stores[store] = new StoreClass(configs.configs)
-        #!TODO Check If stores are OK (user, token, group)
-
-        #Init modules
-        modules =
-            'auth' : './auth/auth'
-            'user' : './user/user'
-            'group' : './group/group'
-            'token' : './token/token'
-            'access' : './access/access'
-            'event' : './event/event'
-        for name,file of modules
-            @log.info "Load #{file} as #{name}"
-            Module = require file
-            @[name] = new Module(@)
-
-    ###
-    #   Helpers used in all application maybe should be removed...
-    ###
-    error : (req,res)->
-        res.json(
-            error:true
-        )
-    ###
-    #   Express
-    ###
-    get : (args...)->
-        @app.get(args...)
-    post : (args...)->
-        @app.post(args...)
-    update : (args...)->
-        @app.update(args...)
-    delete : (args...)->
-        @app.delete(args...)
-
-    ###
-    #   Events
-    ###
-    emit : (args...)->
-        @event.emit(args...)
-    on : (args...)->
-        @event.on(args...)
+    #Init modules
+    modules =
+      'auth' : './auth/auth'
+      'user' : './user/user'
+      'group' : './group/group'
+      'token' : './token/token'
+      'access' : './access/access'
+      'event' : './event/event'
+    for name,file of modules
+      @log.info "Load #{file} as #{name}"
+      Module = require file
+      @[name] = new Module(@)

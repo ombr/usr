@@ -23,7 +23,7 @@ describe('Login Logout', ()->
         it('A user should be able to get a valid token',(done)->
             browser.get('/login/',(res, $)->
                 $('form').fill(
-                    email : 'ombr'
+                    username : 'ombr'
                     password : 'ombr'
                 ).submit((res,$)->
                     should.exist(res.body.token)

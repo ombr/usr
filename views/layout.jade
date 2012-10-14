@@ -1,7 +1,13 @@
 !!! 5
 html
   head
-    title="Authentification Service"
+    title Title
+    meta(name='viewport', content='width=device-width, initial-scale=1.0')
+    link(href="http://netdna.bootstrapcdn.com/twitter-bootstrap/2.1.1/css/bootstrap-combined.min.css", rel="stylesheet")
+    link(href="/css/style.css", rel="stylesheet")
+    block style
   body
-    #main
-      != body
+    .container
+        block content
+    block scripts
+

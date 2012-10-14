@@ -1,9 +1,10 @@
 Component = require '../component'
 module.exports = class Event extends Component
     constructor : (app)->
+        return
         @app = app
         @access = app.access
-        io = require('socket.io').listen(@express())
+        io = require('socket.io').listen(server)
         io.set('log level', 1)
         
         @channel = io.of('/auth')#!TODO Put in configs...

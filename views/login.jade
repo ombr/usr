@@ -1,17 +1,33 @@
-- if (!everyauth.loggedIn)
-    - if ('undefined' !== typeof errors && errors.length)
-      ul#errors
-        - each error in errors
-          li.error= error
-    form(action='/auth/local', method='post')
-      #login
-        label(for=everyauth.password.loginFormFieldName) Login
-        input(type='text', name=everyauth.password.loginFormFieldName, value=email)
-      #password
-        label(for=everyauth.password.passwordFormFieldName) Password
-        input(type='password', name=everyauth.password.passwordFormFieldName)
-      #submit
-        input(type='submit') Login
-- else
-    h2 You are successfully authentificated ! Thank You !
-    a(href="/logout") logout
+extends layout
+block content
+    .row
+        .span12
+            h1 Log in
+    .row
+        .span4
+            form(action='/login/local', method='post')
+                legend With your email
+                .control-group
+                    .controls
+                      input#login(name='login',type='text', placeholder='Email')
+                  .control-group
+                    .controls
+                      input#password(name='password',type='password', placeholder='Password')
+                  .control-group
+                    .controls
+                      label.checkbox
+                        input(type='checkbox')
+                        | Remember me
+                      button#go.btn(type='submit') Log in / Register
+        .span4
+            legend With your favorite website
+            ul.socialicons.color
+                li
+                    a.facebook(href='') facebook
+                li
+                    a.googleb(href='') googleb
+                li
+                    a.twitter(href='') twitter
+block style
+    link(href="/img/SuperMassiveCSSSocialIconSet/style.css", rel="stylesheet")
+    
