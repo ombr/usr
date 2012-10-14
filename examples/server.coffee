@@ -2,6 +2,10 @@ express = require('express')
 http = require('http')
 path = require('path')
 
+
+
+console.log "THIS TEST IS DEPRECATED, I will create a new one soon :-D"
+###
 app = express()
 
 console.log __dirname + '/static/'
@@ -43,3 +47,4 @@ app.server = server
         #return process.env[key]
     #)
 usr.run()
+###

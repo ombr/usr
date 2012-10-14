@@ -2,7 +2,6 @@ Usr = require '../../index'
 express = require 'express'
 http = require 'http'
 path = require 'path'
-tobi = require 'tobi'
 Browser = require 'zombie'
 Q = require 'q'
 
@@ -128,7 +127,7 @@ module.exports = class Tool
 
 
     server.listen(app.get('port'), ()->
-      Browser.debug = true
+      #Browser.debug = true
       browser = new Browser()
       deferred.resolve(
         app:app
