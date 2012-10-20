@@ -63,7 +63,6 @@ module.exports = class Server
     )
 
   authInit : (session, params, cb)->
-    console.log "auth INIT ?"
     try
       _ = @
       args = session[@SESSION_NAME] =
@@ -90,23 +89,26 @@ module.exports = class Server
       return cb(
         e.toString()
       )
-  authEnd : (session, cb)->
+  authEnd : (session, userId, cb)->
     _ = @
-    console.log "TEST"
+    #return cb(null,"http://google.fr/")
     args = session[@SESSION_NAME]
-    console.log args
-    console.log "STOP"
+    if !args?
+      cb(null,"/")
     #TODO Manage Other response_type
     @save('code',
       {
         scope    : args['scope']
         client_id  : args['client_id']
         redirect_uri : args['redirect_uri']
+        user_id : userId
       },
       (err,code)->
         if err
           throw ServerError('Unable to create a new code.')
-        url = args['redirect_uri']+"?code=#{code}&state=#{args['state']}"
+        url = args['redirect_uri']+"?code=#{code}"
+        if args['state']
+          url+="&state=#{args['state']}"
         return cb(null,url)
     )
 

@@ -2,6 +2,8 @@ Q = require 'q'
 
 module.exports = class OAuth2
   init : (@deps)->
+    _ = @
+    usr = @.deps.usr
     OAuthServer = require './server'
     @server = new OAuthServer()
 
@@ -10,77 +12,71 @@ module.exports = class OAuth2
       i:0
     }
     @server.save = (namespace, datas, cb)->
-      console.log "SAVE"
-      console.log namespace
-      d =
-        datas : datas
-        namespace : namespace
-      id = store.i++
-      store[id] = d
-      return cb(null,id)
+      usr.module('store/oauth2/'+namespace).then((store)->
+        return store.add(datas)
+      ).then((datas)->
+        cb(null, datas.id)
+      ).fail((error)->
+        cb(error,null)
+      )
 
     @server.delete = (namespace, id)->
-      delete store[id]
+      usr.module('store/oauth2/'+namespace).then((store)->
+        return store.delete(id)
+      ).then(()->
+      ).fail((error)->
+        cb(error,null)
+      )
 
     @server.get = (namespace, id, cb)->
-      console.log "GET "
-      console.log namespace
-      if store[id]?
-        return cb(null, store[id]["datas"])
-      return cb(['Not found'], null)
+      usr.module('store/oauth2/'+namespace).then((store)->
+        return store.get(id)
+      ).then((datas)->
+        cb(null, datas)
+      ).fail((error)->
+        cb(error,null)
+      )
 
     @server.loginClient = (client_id, client_password, cb)->
-      if client_id == 'myApp' && client_password == 'mySecret'
+      if client_id == 'myApp' && client_password == 'shhh-its-a-secret'
         return cb(null,true)
       return cb(['Access denied'], false)
 
     @server.getClientURIs = (clientId, cb, uriProvided)->
-      console.log "GETCLIENTURI"
       if clientId == 'myApp'
-        console.log "GETCLIENTURI OK"
-        return cb(null, ['http://local.host:3001/auth/usr/callback'])
+        return cb(null, ['http://local.host2:3001/auth/usr/callback'])
 
     @server.getClientResponseType = (clientId, cb)->
-      console.log "RESPONSE TYPE#{clientId}"
       if clientId == 'myApp'
-        console.log "CLIENT ID "
         return cb(null,'code')
       return cb(['Access denied'],null)
 
     return Q.when(true)
 
   authorize :(req,res,next)->
+    _ = @
     params =
       client_id: req.param 'client_id'
       redirect_uri: req.param 'redirect_uri'
       response_type: req.param 'response_type'
       state: req.param 'state'
-    console.log "SEVER INIT ?"
     @server.authInit(req.session, params,(err,url)->
       if err?
         return res.send(err+url)
-      console.log "authentification INIT OK"
-      return res.render 'login'
+      if !req.isAuthenticated()
+        return res.render 'login'
+      else
+        _.endAuthorize(req,res,next)
     )
   endAuthorize :(req,res,next)->
-    console.log "END AUTHORIZED "
-    #if not req.logguedIn?
-      #return res.redirect '/login'
-    
-    console.log ""
-    console.log ""
-    console.log ""
-    console.log ""
-    console.log req.session
-    @server.authEnd(req.session, (err,uri)->
-      console.log "Auth End ?"
-      res.send "Hello World"
+    if !req.isAuthenticated()
+      return res.redirect '/login'
+    @server.authEnd(req.session, req.user.id, (err,uri)->
       if err?
         return res.redirect '/err'
       return res.redirect uri
     )
   token:(req, res, next)->
-    console.log "token"
     params =
       client_id: req.param 'client_id'
       client_secret: req.param 'client_secret'
@@ -90,8 +86,6 @@ module.exports = class OAuth2
     @server.token(params,(err,json)->
       if err?
         return res.send(err)
-      console.log "token"
-      console.log json
       return res.json(json)
     )
 

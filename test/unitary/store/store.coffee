@@ -16,8 +16,8 @@ describe('Store User', ()->
           store.add(
             key:'lalal'
             key2:'value'
-          ).then((id)->
-            store.get(id)
+          ).then((datas)->
+            store.get(datas.id)
           ).then((datas)->
             done()
           ).end()
@@ -30,9 +30,9 @@ describe('Store User', ()->
           store.add(
             key:'lalal'
             key2:'value'
-          ).then((id)->
-            return store.delete(id).then(()->
-              store.get(id).fail(()->
+          ).then((datas)->
+            return store.delete(datas.id).then(()->
+              store.get(datas.id).fail(()->
                 done()
               )
             )
@@ -44,9 +44,9 @@ describe('Store User', ()->
           store.add(
             key:'lalal'
             key2:'value'
-          ).then((id)->
-            return store.delete(id).then(()->
-              store.delete(id).fail(()->
+          ).then((datas)->
+            return store.delete(datas.id).then(()->
+              store.delete(datas.id).fail(()->
                 done()
               )
             )
@@ -72,26 +72,40 @@ describe('Store User', ()->
           )
         )
       )
-      it('should not be able to delete twice',(done)->
-        getStore().then((store)->
-          store.add(
-            key:'lalal'
-            key2:'value'
-          ).then((id)->
-            return store.delete(id).then(()->
-              store.delete(id).fail(()->
-                done()
-              )
+    )
+    describe('Concurency of stores', ()->
+      it('Two stores can be instanciated at the same time',(done)->
+        Q.all([
+            getStore(),
+            getStore()
+        ]).then((stores)->
+          [store1,store2] = stores
+          return Q.all([
+            store1.add(key1:'test'),
+            store2.add(key1:'yeah')
+          ]).then((datas)->
+            [data1,data2] = datas
+            store1.findOneBy(key1:'yeah').then((data)->
+              throw new Error "TEST FAILED"
             )
-          ).end()
-        )
+          )
+        ).fail((error)->
+          if error.message == "TEST FAILED"
+            throw error
+          else
+            done()
+        ).end()
       )
     )
       
   for path in ['../../../lib/store/store']
     testStore(()->
+      defered = Q.defer()
       Store = require path
       store = new Store()
-      return Q.when(store)
+      store.init().then(()->
+        defered.resolve(store)
+      )
+      return defered.promise
     )
 )

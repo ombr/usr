@@ -4,29 +4,47 @@ module.exports = class Auth
   getLogin : (req,res)->
     res.render('login')
   postLoginLocal : (req,res,next)->
-    console.log "POST LOGIN LOCAL"
     _ = @
     @passport.authenticate('local', (err, user, info)->
-      console.log "TEST PASSPORT"
       if err?
-        console.log err
         return res.send "ERROR : #{err}"
       if (!user)
         return res.redirect("/login/?err=#{info.message}")
-      _.deps.usr.module('oauth2').then((oauth2)->
-        console.log "end authorize?"
-        oauth2.endAuthorize(req,res,next)
+      req.logIn(user,{}, (err)->
+        if err?
+          #!TODO How do we manage this erorr ?
+          console.log "LOG IN ERORR :"
+          console.log err
+        else
+          _.deps.usr.module('oauth2/oauth2').then((oauth2)->
+            oauth2.endAuthorize(req,res,next)
+          )
       )
-      #return res.send("Auth result : #{err} #{user} #{info}")
-      #return res.send "Hello World"
-      #console.log "TEST ICI "
     )(req, res, next)
   init : (@deps)->
     _ = @
-    #app.use(passport.initialize())
-    #app.use(passport.session())
     usr = @.deps.usr
     @passport = require('passport')
+    passport = @passport
+
+    @deps.usr._middleware.push(@passport.initialize())
+    @deps.usr._middleware.push(@passport.session())
+    @passport.serializeUser((user, done)->
+      if user.login?
+        done(null, user.login)
+      else
+        done(new Error("login not defined in User"), null)
+    )
+
+    @passport.deserializeUser((id, done)->
+      usr.module('store/user').then((users)->
+        return users.findOneBy(login:id)
+      ).then((user)->
+        done(null,user)
+      ).fail((error)->
+        done(error,null)
+      )
+    )
     LocalStrategy = require('passport-local').Strategy
     @passport.use(
       new LocalStrategy(
@@ -34,15 +52,101 @@ module.exports = class Auth
           usernameField: 'login',
         },
         (login, password, done)->
-          console.log "AUTHENTIFICATION"
+          Q.all([
+            usr.validate('login',login),
+            usr.validate('login',password)
+          ]).then((validated)->
+            [login, password] = validated
+            return Q.all([
+              usr.module('store/user'),
+              usr.module('store/password')
+              usr.module('tool/crypt')
+            ]).then((stores)->
+              [users,passwords,Crypt] = stores
+              users.findOneBy(login:login).then(
+                (user)->
+                  return Crypt.hash(password, user.salt).then((hash1)->
+                    passwords.findOneBy(hash:hash1).then((data)->
+                      return Crypt.hash(password,data.salt).then((hash2)->
+                        if user.hash != hash2
+                          throw new Error("Wrong Password")
+                        done(null, user)
+                      )
+                    ).fail((error)->
+                      done(null, false, { message: 'Wrong password'})
+                    )
+                  ).fail((error)->
+                    done(null, false, { message: "Crypt Error"})
+                  )
+              ).fail((error)->
+                salt = ()->
+                  defered = Q.defer()
+                  Crypt.salt().then((salt)->
+                    return Crypt.hash(password,salt).then((hash)->
+                      defered.resolve(
+                        hash:hash
+                        salt:salt
+                      )
+                    )
+                  ).fail((error)->
+                    defer.reject(error)
+                  )
+                  return defered.promise
+                Q.all([
+                  salt(),
+                  salt()
+                ]).then((hashs)->
+                  Q.all([
+                    users.add(
+                      login:login
+                      salt:hashs[0].salt
+                      hash:hashs[1].hash
+                    ),
+                    passwords.add(
+                      salt:hashs[1].salt
+                      hash:hashs[0].hash
+                    )
+                  ]).then((results)->
+                    done(null,results[0])
+                  ).fail((error)->
+                    done(null, false, { message: "Database error."})
+                  )
+                ).fail((error)->
+                  done(null, false, { message: "Crypt Error"})
+                )
+              )
+            )
+          ).fail((error)->
+            done(null, false, { message: error.message})
+          )
+          #usr.validate('login',login).then((login)->
+            #usr.module('store-user').then((store)->
+              #store.findOneBy(login:login).then((user)->
+                #console.log "user found"
+              #).fail(()->
+                #console.log "user not found"
+                #store.add(
+                  #login:login
+                  #password:password
+                #).then((id)->
+                  #console.log "new user"+id
+                  #return done(null,
+                    #{
+                      #login:login
+                      #pass:password
+                    #}
+                  #)
+                #).fail((error)->
+                  #done(null, false, { message: 'Unknown user' })
+                #)
+
+              #)
+            #)
+            #return store.get(login).then
+          #)
+
           #return done(null, false, { message: 'Unknown user' })
           #return done(new Error("TEST"), null, null)
-          done(null,{
-            username:"TEST"
-            password:"TEST"
-          },{
-            username:"TEST"
-          })
       )
     )
     return Q.when(true)

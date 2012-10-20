@@ -5,9 +5,7 @@ module.exports = class App
   _modules : []
   _configs : {}
   http : null
-  express : null
   config : (name, def, description)->
-    console.log "Get config #{name} : #{description} -> #{def}"
     if process.env[name]?
       return Q.when(process.env[name])
     if @_configs[name]?
@@ -21,33 +19,67 @@ module.exports = class App
   log : console.log
   constructor : ()->
     return
+  _middleware : []
+  middleware :()->
+    defered = Q.defer()
+    Q.all([
+      @config("module/store/user", "./store/store", "Store for users."),
+      @config("module/store/password", "./store/store", "Store for passwords."),
+      @config(
+        "module/store/oauth2/code",
+        "./store/store",
+        "Store for oauth2 code."
+      ),
+      @config(
+        "module/store/oauth2/token",
+        "./store/store",
+        "Store for oauth2 token"
+      ),
+      @module("route/route"),
+      @module("auth/auth")
+    ]).then(()->
+      defered.resolve()
+    ).fail((error)->
+      console.log "ERROR LOADING USR :"
+      console.log error
+    )
+    _ = @
+    return (req,res,next)->
+      i = -1
+      myNext = ()->
+        i++
+        if _._middleware[i]?
+          _._middleware[i](req,res,myNext)
+        else
+          next()
+      defered.promise.then(myNext)
   #
   # Here is the shortcut to load a module
   # Module are loaded by reading the config.
   #
   module : (name)->
     _ = @
-    console.log "Get Module #{name}"
+    #console.log "Get Module #{name}"
     defer = Q.defer()
     if _._modules[name]?
       defer.resolve(_._modules[name])
     else
       @config(
-        "module-#{name}",
-        "./#{name}/#{name}"
+        "module/#{name}",
+        "./#{name}"
         "The path of the module #{name}"
       ).then((modulePath)->
-        console.log "Loading Module #{name}"
+        #console.log "Loading Module #{name}"
         Module = require(modulePath)
         module = new Module
         _._modules[name] = module
         module.app = _
-        console.log "INIT"
+        #console.log "INIT"
         module.init(
           app : _.app
           usr : _
         ).then(()->
-          console.log "Module #{name} loaded"
+          #console.log "Module #{name} loaded"
           defer.resolve(module)
         ).end()
       ).end()
@@ -56,21 +88,17 @@ module.exports = class App
   # This function use the configs to validate by regex the strings
   #
   validate : (name, string)->
-    console.log "VALIDATE"
     return @config(
       'regex-'+name,
       '/^.*$/i', "The regex to validate #{name} string"
     ).then((regex)->
-      console.log "VALIDATED"+string.match(regex)
       return string
       return string.match(regex)
     )
   run: ()->
-    #console.log "Run"
-    @config("module-store-user", "./store/store", "Store for users.")
-    console.log "INIT ROUTE"
-    @module("route")
-    return
+    return Q.when(true)
+    defer = Q.defer()
+    return defer.promise
 
     _ = @
     if not @configs.logger?

@@ -1,3 +1,33 @@
+Q = require 'q'
+
+module.exports = class User
+  me:(req,res,next)->
+    _ = @
+    usr = _.deps.usr
+    token = req.param 'access_token'
+    if !token?
+      return res.json("Access token required")
+    Q.all([
+      usr.module('store/oauth2/token'),
+      usr.module('store/user')
+    ]).then((stores)->
+      [tokens,users] = stores
+      tokens.get(token).then((datas)->
+        users.get(datas.user_id)
+      )
+    ).then((user)->
+      res.json(user)
+    ).fail((error)->
+      console.log "USER>ME>ERROR"
+      console.log error
+      res.json "Error"
+    )
+  init : (@deps)->
+    return Q.when(true)
+
+
+
+###
 Component = require '../component'
 module.exports = class User extends Component
   constructor : (app)->
@@ -57,4 +87,4 @@ module.exports = class User extends Component
         _.checkErr(err)
         cb(res)
     )
-
+###

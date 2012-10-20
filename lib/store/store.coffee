@@ -17,8 +17,8 @@ Q = require 'q'
 
 
 module.exports = class Store
-  _store : {}
   init : ()->
+    @._store = {}
     Q.when(true)
 
   _generateId:()->
@@ -34,7 +34,7 @@ module.exports = class Store
         throw new Error("Id Collision")
       datas.id = id
       _._store[id] = datas
-      return id
+      return datas
     )
 
   get:(id)->
