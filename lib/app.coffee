@@ -21,28 +21,7 @@ module.exports = class App
     return
   _middleware : []
   middleware :()->
-    defered = Q.defer()
-    Q.all([
-      @config("module/store/user", "./store/store", "Store for users."),
-      @config("module/store/password", "./store/store", "Store for passwords."),
-      @config(
-        "module/store/oauth2/code",
-        "./store/store",
-        "Store for oauth2 code."
-      ),
-      @config(
-        "module/store/oauth2/token",
-        "./store/store",
-        "Store for oauth2 token"
-      ),
-      @module("route/route"),
-      @module("auth/auth")
-    ]).then(()->
-      defered.resolve()
-    ).fail((error)->
-      console.log "ERROR LOADING USR :"
-      console.log error
-    )
+    init = @module('init/init')
     _ = @
     return (req,res,next)->
       i = -1
@@ -52,7 +31,7 @@ module.exports = class App
           _._middleware[i](req,res,myNext)
         else
           next()
-      defered.promise.then(myNext)
+      init.then(myNext)
   #
   # Here is the shortcut to load a module
   # Module are loaded by reading the config.
@@ -97,9 +76,8 @@ module.exports = class App
     )
   run: ()->
     return Q.when(true)
-    defer = Q.defer()
-    return defer.promise
 
+###
     _ = @
     if not @configs.logger?
       Log = require 'log'
@@ -162,3 +140,4 @@ module.exports = class App
       @log.info "Load #{file} as #{name}"
       Module = require file
       @[name] = new Module(@)
+###
