@@ -16,8 +16,8 @@ describe('Store User', ()->
           store.add(
             key:'lalal'
             key2:'value'
-          ).then((datas)->
-            store.get(datas.id)
+          ).then((id)->
+            store.get(id)
           ).then((datas)->
             done()
           ).end()
@@ -30,9 +30,9 @@ describe('Store User', ()->
           store.add(
             key:'lalal'
             key2:'value'
-          ).then((datas)->
-            return store.delete(datas.id).then(()->
-              store.get(datas.id).fail(()->
+          ).then((id)->
+            return store.delete(id).then(()->
+              store.get(id).fail(()->
                 done()
               )
             )
@@ -44,9 +44,9 @@ describe('Store User', ()->
           store.add(
             key:'lalal'
             key2:'value'
-          ).then((datas)->
-            return store.delete(datas.id).then(()->
-              store.delete(datas.id).fail(()->
+          ).then((id)->
+            return store.delete(id).then(()->
+              store.delete(id).fail(()->
                 done()
               )
             )

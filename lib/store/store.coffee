@@ -1,21 +1,5 @@
 Q = require 'q'
 
-#console.log "TEST"
-#console.log "TEST"
-#console.log "TEST"
-#Q.fcall(()->
-  #throw new Error('World')
-  #return "Hello"
-#).then((test)->
-  #console.log test
-#,(test)->
-  #console.log test
-#).end()
-
-
-
-
-
 module.exports = class Store
   init : ()->
     @._store = {}
@@ -32,9 +16,9 @@ module.exports = class Store
       id = _._generateId()
       if _._store[id]?
         throw new Error("Id Collision")
-      datas.id = id
+      #datas.id = id
       _._store[id] = datas
-      return datas
+      return id
     )
 
   get:(id)->

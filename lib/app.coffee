@@ -2,9 +2,14 @@ EventEmitter = require('eventemitter2').EventEmitter2
 Q = require 'q'
 
 module.exports = class App
-  _modules : []
-  _configs : {}
-  http : null
+  constructor:()->
+    @_modules = []
+    @_configs = {}
+    http = null
+  setConfig : (name, value)->
+    #!TODO Maybe some work on this... No rewrite env ?
+    @_configs[name] =
+      value:value
   config : (name, def, description)->
     if process.env[name]?
       return Q.when(process.env[name])
@@ -17,8 +22,6 @@ module.exports = class App
       return def
     )
   log : console.log
-  constructor : ()->
-    return
   _middleware : []
   middleware :()->
     init = @module('init/init')
@@ -31,7 +34,11 @@ module.exports = class App
           _._middleware[i](req,res,myNext)
         else
           next()
-      init.then(myNext)
+      #TODO Fail does not work here ? Why ?
+      init.then(myNext).fail((error)->
+        console.log "INIT FAILT"
+        res.send "Init Error #{error.message}"
+      )
   #
   # Here is the shortcut to load a module
   # Module are loaded by reading the config.
@@ -45,11 +52,11 @@ module.exports = class App
     else
       @config(
         "module/#{name}",
-        "./#{name}"
+        "/#{name}"
         "The path of the module #{name}"
       ).then((modulePath)->
         #console.log "Loading Module #{name}"
-        Module = require(modulePath)
+        Module = require(__dirname + modulePath)
         module = new Module
         _._modules[name] = module
         module.app = _
@@ -60,19 +67,23 @@ module.exports = class App
         ).then(()->
           #console.log "Module #{name} loaded"
           defer.resolve(module)
-        ).end()
-      ).end()
+        )
+      ).fail((error)->
+        defer.reject(error)
+      )
     return defer.promise
   #
   # This function use the configs to validate by regex the strings
   #
-  validate : (name, string)->
+  validate : (string, name, regex)->
     return @config(
-      'regex-'+name,
+      'regex_'+name,
+      regex,
       '/^.*$/i', "The regex to validate #{name} string"
     ).then((regex)->
+      if not regex?
+        console.log "ERROR REGEX #{name} NOT DEFINED !"
       return string
-      return string.match(regex)
     )
   run: ()->
     return Q.when(true)

@@ -8,6 +8,7 @@ fs = require 'fs'
 
 
 app = express()
+server = http.createServer(app)
 app.set('port', process.env.PORT || 3000)
 app.set('views', __dirname + '/../views')
 app.set('view engine', 'jade')
@@ -26,14 +27,13 @@ app.use(usr.middleware())
 app.use(express.methodOverride())
 app.use(app.router)
 
-server = http.createServer(app)
 
 server.listen(app.get('port'), ()->
-  console.log "SERVER STARTED"
+  console.log "SERVER STARTED"+app.get('port')
 )
 
 options = {
-  key: fs.readFileSync('./local.host.key'),
-  cert: fs.readFileSync('./local.host.csr')
+  key: fs.readFileSync(__dirname+'/local.host.key'),
+  cert: fs.readFileSync(__dirname+'/local.host.csr')
 }
-https.createServer(options, app).listen(8080)
+#https.createServer(options, app).listen(4443)

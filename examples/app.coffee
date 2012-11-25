@@ -7,7 +7,7 @@ passport = new Passport()
 passport.use('usr',
     new OAuth2Strategy(
       {
-        authorizationURL: 'http://local.host:3000/oauth2/authorize',
+        authorizationURL: 'http://local.host:3000/oauth2/facebook',
         tokenURL: 'http://local.host:3000/oauth2/token',
         clientID: 'myApp',
         clientSecret: 'shhh-its-a-secret'

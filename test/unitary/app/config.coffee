@@ -2,7 +2,7 @@ expect = require('chai').expect()
 
 
 describe('Configs', ()->
-  describe('/login', ()->
+  describe('Get And Set', ()->
     it('Should be able to get a config.', (done)->
       Usr = require '../../../index'
       usr = new Usr

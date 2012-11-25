@@ -3,48 +3,72 @@ Q = require 'q'
 module.exports = class Auth
   getLogin : (req,res)->
     res.render('login')
-  postLoginLocal : (req,res,next)->
+  authenticate :(provider)->
     _ = @
-    @passport.authenticate('local', (err, user, info)->
-      if err?
-        return res.send "ERROR : #{err}"
-      if (!user)
-        return res.redirect("/login/?err=#{info.message}")
-      req.logIn(user,{}, (err)->
+    return (req, res, next)->
+      console.log "Auth authenticate "+provider
+      _.passport.authenticate(provider,{
+        scope:'email'
+      })(req, res, next)
+  endAuthenticate : (provider)->
+    _ = @
+    return (req, res, next)->
+      _.passport.authenticate(provider, (err, user, info)->
+        console.log "endAuthentificate"
         if err?
-          #!TODO How do we manage this erorr ?
-          console.log "LOG IN ERORR :"
-          console.log err
-        else
-          _.deps.usr.module('oauth2/oauth2').then((oauth2)->
-            oauth2.endAuthorize(req,res,next)
-          )
-      )
-    )(req, res, next)
+          return res.send "ERROR : #{err}"
+        if (!user)
+          return res.redirect("/login/?err=#{info.message}")
+        req.logIn(user,{}, (err)->
+          if err?
+            #!TODO How do we manage this erorr ?
+            console.log "LOG IN ERORR :"
+            console.log err
+          else
+            _.deps.usr.module('oauth2/oauth2').then((oauth2)->
+              oauth2.endAuthorize(req,res,next)
+            )
+        )
+      )(req, res, next)
   init : (@deps)->
     _ = @
     usr = @.deps.usr
-    @passport = require('passport')
+    passportReference = require 'passport'
+    Passport = passportReference.Passport
+    @passport = new Passport()
     passport = @passport
 
     @deps.usr._middleware.push(@passport.initialize())
     @deps.usr._middleware.push(@passport.session())
     @passport.serializeUser((user, done)->
-      if user.login?
-        done(null, user.login)
+      console.log "serialize"
+      console.log user
+      if user.usr_id?
+        done(null, user.usr_id)
       else
-        done(new Error("login not defined in User"), null)
+        done(new Error("usr_id not defined in User"), null)
     )
 
     @passport.deserializeUser((id, done)->
+      console.log "deserialize"
+      console.log id
       usr.module('store/user').then((users)->
-        return users.findOneBy(login:id)
+        return users.get(id)
       ).then((user)->
         done(null,user)
       ).fail((error)->
         done(error,null)
       )
     )
+    # Facebook :
+    providers = []
+    for provider in ['facebook']
+      providers.push(@init_provider(provider))
+    Q.all(providers).then(()->
+      console.log "ALL PROVIDERS LOADED :-D"
+    )
+
+    # Email/Password
     LocalStrategy = require('passport-local').Strategy
     @passport.use(
       new LocalStrategy(
@@ -53,8 +77,8 @@ module.exports = class Auth
         },
         (login, password, done)->
           Q.all([
-            usr.validate('login',login),
-            usr.validate('login',password)
+            usr.validate(login,'login'),
+            usr.validate(password,'password')
           ]).then((validated)->
             [login, password] = validated
             return Q.all([
@@ -96,29 +120,106 @@ module.exports = class Auth
                   salt(),
                   salt()
                 ]).then((hashs)->
+                  user =
+                    login:login
+                    salt:hashs[0].salt
+                    hash:hashs[1].hash
                   Q.all([
-                    users.add(
-                      login:login
-                      salt:hashs[0].salt
-                      hash:hashs[1].hash
-                    ),
+                    users.add(user),
                     passwords.add(
                       salt:hashs[1].salt
                       hash:hashs[0].hash
                     )
                   ]).then((results)->
-                    done(null,results[0])
+                    [userId,password] = results
+                    user.usr_id = userId
+                    done(null,user)
                   ).fail((error)->
+                    console.log "Auth>Local"
+                    console.log error
                     done(null, false, { message: "Database error."})
                   )
                 ).fail((error)->
+                  console.log "Auth>Local"
+                  console.log error
                   done(null, false, { message: "Crypt Error"})
                 )
               )
             )
           ).fail((error)->
+            console.log "Auth>Local"
+            console.log error
             done(null, false, { message: error.message})
           )
+      )
+    )
+    return Q.when(true)
+  init_provider : (provider)->
+    usr = @deps.usr
+    defered = Q.defer()
+    usr.config(
+      'provider_'+provider+'_enabled',
+      false,
+      "Is the provider #{provider} enabled"
+    ).then((enabled)=>
+      if enabled
+        Q.all([
+          usr.config(
+            'provider_'+provider+'_id',
+            null,
+            "#{provider} app id"
+          ),
+          usr.config(
+            'provider_'+provider+'_secret',
+            null,
+            "#{provider} app id"
+          ),
+          usr.config(
+            'host',
+            'http://local.host:3000',
+            "host local link"
+          )
+        ]).then((configs)=>
+          [id,secret,host] = configs
+          Strategy = require('passport-'+provider).Strategy
+          @passport.use(
+            'facebook',
+            new Strategy(
+              clientID: id,
+              clientSecret: secret,
+              callbackURL: host+"/auth/facebook/callback"
+            ,
+            (accessToken, refreshToken, profile, done)->
+              datas = {}
+              datas[provider] = profile.id
+              query = {}
+              usr.module('store/user').then((users)->
+                query[provider] = datas[provider]
+                users.findOneBy(query).then((user)->
+                  console.log "FACEBOOK WELCOME BACK"
+                  done(null, user)
+                ).fail((error)->
+                  user = profile
+                  user[provider] = datas[provider]
+                  #user[provider+"_datas"] = profile
+                  users.add(user).then((id)->
+                    console.log "FACEBOOK CREATED"
+                    user.usr_id = id
+                    done(null,user)
+                  )
+                )
+              ).fail((error)->
+                console.log "ERORR"
+                console.log error
+              )
+              #datas[provider+"_datas"] = profile
+            )
+          )
+        defered.resolve(true)
+        console.log "STRATEGIE FACEBOOK ON "
+        )
+    )
+    return defered.promise
           #usr.validate('login',login).then((login)->
             #usr.module('store-user').then((store)->
               #store.findOneBy(login:login).then((user)->
@@ -147,9 +248,6 @@ module.exports = class Auth
 
           #return done(null, false, { message: 'Unknown user' })
           #return done(new Error("TEST"), null, null)
-      )
-    )
-    return Q.when(true)
 ###
           console.log "TEST"
           return true

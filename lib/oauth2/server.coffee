@@ -71,24 +71,28 @@ module.exports = class Server
         redirect_uri  : @check(params, 'redirect_uri')
         scope     : @check(params, 'scope') || @DEFAULT_SCOPE
         state     : @check(params, 'state')
-      _.getClientResponseType(args['client_id'], (err,response_types)->
-        if err
-          throw new ServerError('Unable to retrive clients response_types')
-        if not args['response_type'] in response_types
-          throw new UnauthorizedClient(
-            "response_type #(args['response_type']} is not "+
-            "authorized for this client"
-          )
-        _._getUri(args, (uri)->
-          args['redirect_uri'] = uri
-          return cb(null)
-        )
-      )
     catch e
-      #TODO Error To JSON !!!
-      return cb(
-        e.toString()
+      cb(
+        error : 'invalid_request'
+        error_description : e.message
       )
+    _.getClientResponseType(args['client_id'], (err,response_types)->
+      if err
+        return cb(
+          error : 'server_error'
+          error_description : err
+        )
+        throw new ServerError('Unable to retrive clients response_types')
+      if not args['response_type'] in response_types
+        throw new UnauthorizedClient(
+          "response_type #(args['response_type']} is not "+
+          "authorized for this client"
+        )
+      _._getUri(args, (uri)->
+        args['redirect_uri'] = uri
+        return cb(null)
+      )
+    )
   authEnd : (session, userId, cb)->
     _ = @
     #return cb(null,"http://google.fr/")

@@ -13,6 +13,8 @@ module.exports = class User
     ]).then((stores)->
       [tokens,users] = stores
       tokens.get(token).then((datas)->
+        console.log "TOKEN"
+        console.log datas
         users.get(datas.user_id)
       )
     ).then((user)->
