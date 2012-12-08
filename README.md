@@ -1,31 +1,37 @@
 # Usr Authentification and role management REST OAuth2 WebService
 
-Everytime you start a new project. You need to code the user authentification and your group management. With USR you just have to deploy one service, and then you can use it for all your project. You have a efficient and easy to use (with a rest interface) group management on your users.
+Just deploy usr app on heroku and use it to authenticate and manage your users.
 
-## Description
+## Installation
 
-Usr provides you a webservice to authenticate and manage your users with a REST API :
+`
+git clone https://github.com/ombr/usr.git usr
+cd usr
+heroku create name-of-your-app
+git remote add heroku git@heroku.com:name-of-your-app.git
+git push heroku master
+`
 
-- EveryAuth enable your users to login with any credentials or service (Facebook,...)
-- Your users create a unique account for all your services.
-- All your futures application can use usr to authentificate your user and get their group.
-- Use any storage (MongoDb, CouchDb, MySQL,..)
+## Usage :
 
-## Authentification of a user :
+Use your service to authenticate your users with oauth2.
+You can check the examples for more details.
 
-1/ You deploy your service to auth.yourdomain.com
-2/ You can use Oauth2 to authentificate your user.
+## Configuration
 
+You configure usr application by setting Environement variables :
+
+### authentification :
+
+- FACEBOOK_KEY, FACEBOOK_SECRET for Facebook
+- GOOGLE_KEY, GOOGLE_SECRET for google
+- TWITTER_KEY, TWITTER_SECRET for twitter
 
 ## Status
 
 Currently there is not much working on, but you can user
 `make test` to see the status
 
-
-The goal of this project :
-
-An easy to deploy on cloudfoundry webservice that you can use for any of your project to authenticate your user and manage their groups. I follow oAuth2 specs and maps the group user in the scope.
 
 ## Service deployment :
 You need npm and vmc (cloudfoundry-client)
