@@ -27,38 +27,31 @@
     }
   ],
   "dependencies": {
-    "coffee-script": ">=1.3",
-    "express": "~3.0.0rc4",
-    "everyauth": "~0.2.32",
-    "log": "~1.3.0",
-    "mongodb": "~1.1.2",
-    "node-promise": "~0.5.3",
-    "eventemitter2": "~0.4.9",
-    "async": "~0.1.22",
-    "socket.io": "~0.9.9",
+    "coffee-script": "1.4.x",
+    "express": "3.0.x",
+    "q": "0.8.x",
     "jade": "~0.27.0",
-    "supervisor": "~0.4.1",
+    "less": "1.3.x",
     "passport": "~0.1.12",
     "passport-local": "~0.1.6",
-    "q": "~0.8.8",
-    "http": "0.0.0",
-    "connect-flash": "~0.1.0",
-    "less": "~1.3.0",
-    "zombie": "~2.0.0-alpha5",
     "passport-oauth": "~0.1.12",
-    "soda": "~0.2.5",
-    "passport-facebook": "~0.1.4"
+    "passport-facebook": "~0.1.4",
+    "http": "0.0.0",
+    "eventemitter2": "~0.4.11"
   },
   "engines": {
-    "node": ">=0.6"
+    "node": "0.6.12",
+    "npm": "1.1.4"
   },
   "devDependencies": {
+    "soda": "~0.2.5",
+    "zombie": "~2.0.0-alpha5",
     "tobi": "*",
     "chai": "*",
     "socket.io-client": "~0.9.8",
     "mocha": "*",
     "jquery": "~1.7.3",
-    "coffeelint": "~0.5.2"
+    "coffeelint": "0.5.x"
   },
   "_id": "@0.0.1",
   "version": "0.0.1"

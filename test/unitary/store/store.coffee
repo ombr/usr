@@ -8,7 +8,7 @@ describe('Store User', ()->
         getStore().then((store)->
           store.get(32432423432).fail(()->
             done()
-          ).end()
+          ).done()
         )
       )
       it('Some datas can be set and retrieve',(done)->
@@ -20,7 +20,7 @@ describe('Store User', ()->
             store.get(id)
           ).then((datas)->
             done()
-          ).end()
+          ).done()
         )
       )
     )
@@ -36,7 +36,7 @@ describe('Store User', ()->
                 done()
               )
             )
-          ).end()
+          ).done()
         )
       )
       it('should not be able to delete twice',(done)->
@@ -50,7 +50,7 @@ describe('Store User', ()->
                 done()
               )
             )
-          ).end()
+          ).done()
         )
       )
     )
@@ -94,7 +94,7 @@ describe('Store User', ()->
             throw error
           else
             done()
-        ).end()
+        ).done()
       )
     )
       

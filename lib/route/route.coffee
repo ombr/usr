@@ -56,7 +56,7 @@ module.exports = class Route
             '/auth/'+provider+'/callback',
             oauth2.start(),
             auth.authenticate(provider),
-            oauth2.end()
+            oauth2.done()
           )
         )
     )
