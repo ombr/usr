@@ -2,29 +2,39 @@ Q = require 'q'
 module.exports = class Route
   auth : ()->
     _ = @
-    # Authentification process
-    @deps.app.get('/login*',(req,res)->
-      _.deps.usr.module('auth/auth').then((auth)->
-        auth.getLogin(req,res)
-      )
-    )
-    @deps.app.get('/auth/local',(req,res,next)->
-      _.deps.usr.module('auth/auth').then((auth)->
-        auth.authenticate('local')(req,res,next)
-      )
+
+    ###
+    # User Interface point :
+    ###
+
+    #Login end point :
+    Q.all([
+      _.deps.usr.module('auth/auth'),
+      _.deps.usr.module('oauth2/oauth2')
+    ]).then((res)->
+      [auth,oauth2] = res
+      authenticate =  (req,res,next)->
+        #TODO params provider.
+        auth.auth(req.param('provider'))(req,res,()->
+          oauth2.end()(req,res,()->
+            #we were not authenticating with Oauth2... Let's do something
+            #else...
+            res.render('error',
+              error:
+                new Error("Oh no....I don't know where I should get you...")
+            )
+          )
+        )
+      _.deps.app.get('/auth/:provider',oauth2.start(), authenticate)
+      _.deps.app.post('/auth/:provider',oauth2.start(), authenticate)
     )
 
-    @deps.app.post('/login/local',(req,res,next)->
-      _.deps.usr.module('auth/auth').then((auth)->
-        auth.endAuthenticate('local')(req,res,next)
-      )
-    )
-    # OAuth2 End points
-    @deps.app.get('/oauth2/authorize',(req,res,next)->
-      _.deps.usr.module('oauth2/oauth2').then((oauth2)->
-        oauth2.authorize(req,res,next)
-      )
-    )
+
+    ###
+    # OAUTH2 ENDPOINT
+    ###
+
+    #Token end point.
     @deps.app.post('/oauth2/token',(req,res,next)->
       _.deps.usr.module('oauth2/oauth2').then((oauth2)->
         oauth2.token(req,res,next)
@@ -61,6 +71,11 @@ module.exports = class Route
         )
     )
 
+
+    ###
+    # API end points :
+    ###
+
     # User Graph
     @deps.app.get('/me',(req,res,next)->
       _.deps.usr.module('user/user').then((user)->
@@ -69,10 +84,7 @@ module.exports = class Route
     )
     #Home redirect to login
     @deps.app.get('/',(req,res,next)->
-      if req.user?
-        res.send("Hello #{req.user.login} ! How are you ?")
-      else
-        res.redirect "/login"
+      res.send("USR AUTHENTICATION END POINT.")
     )
   init : (@deps)->
     @auth()

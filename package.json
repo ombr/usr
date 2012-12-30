@@ -37,7 +37,8 @@
     "passport-oauth": "~0.1.12",
     "passport-facebook": "~0.1.4",
     "http": "0.0.0",
-    "eventemitter2": "~0.4.11"
+    "eventemitter2": "~0.4.11",
+    "validator": "~0.4.19"
   },
   "engines": {
     "node": "0.6.12",

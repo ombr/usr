@@ -26,7 +26,8 @@ module.exports = class Init
           "Store for oauth2 token"
         ),
         usr.module("route/route"),
-        usr.module("auth/auth")
+        usr.module("auth/auth"),
+        usr.module("oauth2/oauth2")
       ])
     ).then(()->
       defered.resolve()
