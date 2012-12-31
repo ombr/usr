@@ -3,9 +3,19 @@ module.exports = class Route
   auth : ()->
     _ = @
 
+    home = (req,res,next)->
+      if not req.user?
+        return res.send("USR AUTHENTICATION END POINT.")
+      else
+        return res.json req.user
+
+
     ###
     # User Interface point :
     ###
+
+    #Home sweet home
+    @deps.app.get('/',home)
 
     #Login end point :
     Q.all([
@@ -17,13 +27,18 @@ module.exports = class Route
         #TODO params provider.
         auth.auth(req.param('provider'))(req,res,()->
           oauth2.end()(req,res,()->
+            home(req,res,next)
             #we were not authenticating with Oauth2... Let's do something
             #else...
-            res.render('error',
-              error:
-                new Error("Oh no....I don't know where I should get you...")
-            )
+            #res.render('error',
+              #error:
+                #new Error("Oh no....I don't know where I should get you...")
+            #)
           )
+          _.deps.usr.module('event/event').then((events)->
+            events.emit('user/login', req.user)
+          )
+
         )
       _.deps.app.get('/auth/:provider',oauth2.start(), authenticate)
       _.deps.app.post('/auth/:provider',oauth2.start(), authenticate)
@@ -81,10 +96,6 @@ module.exports = class Route
       _.deps.usr.module('user/user').then((user)->
         user.me(req,res,next)
       )
-    )
-    #Home redirect to login
-    @deps.app.get('/',(req,res,next)->
-      res.send("USR AUTHENTICATION END POINT.")
     )
   init : (@deps)->
     @auth()

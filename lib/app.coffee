@@ -1,4 +1,3 @@
-EventEmitter = require('eventemitter2').EventEmitter2
 Q = require 'q'
 
 module.exports = class App
@@ -37,7 +36,8 @@ module.exports = class App
       #TODO Fail does not work here ? Why ?
       init.then(myNext).fail((error)->
         console.log "INIT FAILT"
-        res.send "Init Error #{error.message}"
+        res.render 'error', error:error
+        #res.send "Init Error #{error.message}"
       )
   #
   # Here is the shortcut to load a module

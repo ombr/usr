@@ -9,6 +9,7 @@ module.exports = class Tool
   tool : ()->
     deferred = Q.defer()
     res = {}
+    res.browser = new Browser
     #
     # Server App
     #
@@ -56,7 +57,7 @@ module.exports = class Tool
     passport.use('usr',
         new OAuth2Strategy(
           {
-            authorizationURL: res['url']+'/oauth2/facebook',
+            authorizationURL: res['url']+'/auth/local',
             tokenURL: res['url']+'/oauth2/token',
             clientID: 'myApp',
             clientSecret: 'shhh-its-a-secret'
@@ -103,7 +104,7 @@ module.exports = class Tool
     app.get('/',
       (req,res, next)->
         if req.user?
-          res.send("Hello <div id='login'>#{req.user.displayName}</div>")
+          res.send("Hello <div id='login'>#{req.user.login}</div>")
         else
           passport.authenticate('usr')(req,res,next)
     )
@@ -127,17 +128,21 @@ module.exports = class Tool
     server = http.createServer(app)
     serverUsr.listen(3000, ()->
       server.listen(3001,()->
+        res.end = (done)->
+          server.close()
+          serverUsr.close()
+          done()
         deferred.resolve(res)
       )
     )
     return deferred.promise
 
+###
 tool = new Tool()
 tool.tool().then((res)->
   console.log res['clientUrl']
   console.log res['url']
 )
-###
 tool = new Tool()
 Q.all([
   tool.start(),

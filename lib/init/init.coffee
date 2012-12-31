@@ -6,6 +6,10 @@ module.exports = class Init
     defered = Q.defer()
     @_providers().then(()->
       return Q.all([
+        usr.module("event/event"),
+        usr.module("route/route"),
+        usr.module("auth/auth"),
+        usr.module("oauth2/oauth2"),
         usr.config(
           "module/store/user",
           "/store/store",
@@ -24,12 +28,16 @@ module.exports = class Init
           "module/store/oauth2/token",
           "/store/store",
           "Store for oauth2 token"
-        ),
-        usr.module("route/route"),
-        usr.module("auth/auth"),
-        usr.module("oauth2/oauth2")
+        )
       ])
-    ).then(()->
+    ).then((res)->
+      event = res[0]
+      event.once('user/login',(datas)->
+        console.log "FIRST LOGIN :-D "
+        #We should check here if there is only one user, and if there
+        #is grant him admin right :-D
+        console.log datas
+      )
       defered.resolve()
     ).fail((error)->
       defered.reject(error)
